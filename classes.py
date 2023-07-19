@@ -1,7 +1,7 @@
 from collections import UserDict
-#from collections.abc import Iterator
 from datetime import datetime, timedelta
 from re import match
+
 
 class Field:
 
@@ -11,6 +11,7 @@ class Field:
 
     def __str__(self) -> str:
         return self.value
+
 
     def __repr__(self) -> str:
         return str(self)

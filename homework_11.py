@@ -4,6 +4,7 @@ from re import search
 adress_book = AddressBook()
 
 def input_error(func):
+    
     def wrapper(*args):
         try:
             result = func(*args)
@@ -61,6 +62,7 @@ def change_phone(*args):
         return rec.change_phone(old_phone, new_phone)
     return f"No contact {name} in address book"
 
+
 @input_error
 def days_to_birthday(*args):
     name = args[0]
@@ -105,6 +107,7 @@ def add_command(*args):
         return adress_book.add_record(rec)
     
     return 'something wrong'
+
 
 def no_command(*args):
     return 'Unknown command'
