@@ -3,6 +3,16 @@ from datetime import datetime, timedelta
 from re import match
 
 
+class WrongDateError(Exception):
+    ...
+
+class WrongPhoneFormat(Exception):
+    ...
+
+
+class NoDateError(Exception):
+    ...
+
 class Field:
 
     def __init__(self, value) -> None:
@@ -22,11 +32,46 @@ class Name(Field):
 
 
 class Phone(Field):
-    ...
+    def __init__(self, value = None):
+        self._value = None
+        self.value = value
+
+
+    @property
+    def value(self):
+        return self._phone
+
+
+    @value.setter
+    def value(self, new_phone):
+        r_data = r'\d{12}'
+        data = match(r_data, new_phone)
+        if data:
+            self._phone = new_phone
+        else:
+            raise WrongPhoneFormat
 
 
 class Birthday(Field):
-    ...
+    
+    def __init__(self, value = None):
+        self._value = None
+        self.value = value
+
+
+    @property
+    def value(self):
+        return self._birthday
+
+
+    @value.setter
+    def value(self, new_birthday):
+        matched = r'^(\d{1,2}\.{1}\d{1,2}\.\d{4})$'
+        data = match(matched, str(new_birthday))
+        if data:
+            self._birthday = new_birthday
+        else:
+            raise WrongDateError
 
 
 class Record:
@@ -34,73 +79,30 @@ class Record:
     def __init__(self, name: Name, phone: Phone = None, birthday : Birthday = None) -> None:
         self.name = name
         self.phones = []
-        self._phone = None
-        self._birthday = None
+        self.birthday = birthday
+        self.phone = phone
         if phone:
             self.phones.append(phone)
-        if birthday:
-            self.phones.insert(0, f'DOB({birthday})')
-
-
-    @property
-    def phone(self):
-        return self._phone
-
-
-    @phone.setter
-    def phone(self, new_phone: Phone):
-        r_data = r'\d{12}'
-        data = match(r_data, new_phone.value)
-        if data:
-            self._phone = new_phone
-        else:
-            raise ValueError
-
-
-    @property
-    def birthday(self):
-        return self._birthday
-
-
-    @birthday.setter
-    def birthday(self, new_birthday):
-        matched = r'^(\d{1,2}\.{1}\d{1,2}\.\d{4})$'
-        data = match(matched, str(new_birthday))
-        if data:
-            self._birthday = new_birthday
-        else:
-            raise ValueError
 
 
     def add_phone(self, phone: Phone):
-        if type(self.phones[0]) == str:
-            if phone.value not in [p.value for p in self.phones[1::]]:
-                self.phones.append(phone)
-                return f"phone {phone} add to contact {self.name}"
-        else:
-            if phone.value not in [p.value for p in self.phones]:
-                    self.phones.append(phone)
-                    return f"phone {phone} add to contact {self.name}"
-        return f"{phone} present in phones of contact {self.name}"
+        if phone.value not in [p.value for p in self.phones]:
+            self.phones.append(phone)
+            return f"phone {phone} added to contact {self.name}"
+        return f"{phone} is present in phones of contact {self.name}"
 
 
     def change_phone(self, old_phone: Phone, new_phone: Phone):
-        if type(self.phones[0]) == str:
-            for idx, p in enumerate(self.phones[1::]):
-                if old_phone.value == p.value:
-                    self.phones[idx+1] = new_phone.value
-                    return f"old phone {old_phone.value} change to {new_phone.value}"
-        else:
-            for idx, p in enumerate(self.phones):
-                if old_phone.value == p.value:
-                    self.phones[idx] = new_phone.value
-                    return f"old phone {old_phone.value} change to {new_phone.value}"
-        return f"{old_phone.value} not present in phones of contact {self.name}"
+        for idx, p in enumerate(self.phones):
+            if old_phone.value == p.value:
+                self.phones[idx] = new_phone
+                return f"old phone {old_phone.value} changeed to {new_phone.value}"
+        return f"{old_phone.value} is not present in phones of contact {self.name}"
 
 
-    def days_to_birthday(self, birthday):
-        if birthday:
-            birthday_date = birthday.split('.')
+    def days_to_birthday(self):
+        if self.birthday:
+            birthday_date = self.birthday.value.split('.')
             current_date = datetime.now()
             datetime_birthday = datetime(year=current_date.year, month=int(birthday_date[1]), day=int(birthday_date[0]))
             days_left = datetime_birthday - current_date
@@ -112,6 +114,7 @@ class Record:
                 return result.days
             else:
                 return 'Tomorrow is your birthday'
+        raise NoDateError
 
 
     def __str__(self) -> str:
